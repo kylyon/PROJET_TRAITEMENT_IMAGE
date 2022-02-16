@@ -29,17 +29,17 @@ const int Pixel::getBlue() const
     return this->b;
 }
 
-const int Pixel::setRed(int r)
+void Pixel::setRed(int r)
 {
     this->r = r;
 }
 
-const int Pixel::setGreen(int g)
+void Pixel::setGreen(int g)
 {
     this->g = g;
 }
 
-const int Pixel::setBlue(int b)
+void Pixel::setBlue(int b)
 {
     this->b = b;
 }

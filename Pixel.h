@@ -10,9 +10,9 @@ class Pixel
         const int getRed() const;
         const int getGreen() const;
         const int getBlue() const;
-        const int setRed(int r);
-        const int setGreen(int g);
-        const int setBlue(int b);
+        void setRed(int r);
+        void setGreen(int g);
+        void setBlue(int b);
         virtual ~Pixel();
 
     protected:

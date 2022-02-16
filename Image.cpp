@@ -1,23 +1,13 @@
 #include "Image.h"
 #include "Pixel.h"
 #include <vector>
-#define STB_IMAGE_IMPLEMENTATION
-#include "lib/stb/stb_image.h"
 
 using std::vector;
+using namespace std;
 
 Image::Image(char* filename)
 {
-    uint8_t* rgb_image = stbi_load("ciel.jpg", &this->width, &this->height, &this->bpp, 3);
-
-    for(int i=0; i < width * height * 3; i++)
-    {
-        if(i%3 == 2)
-        {
-            Pixel p = Pixel(rgb_image[i-2], rgb_image[i-1], rgb_image[i]);
-            this->pixels.push_back(p);
-        }
-    }
+    this->pixels = stbi_load("ciel.jpg", &this->width, &this->height, &this->bpp, 3);
 }
 
 int Image::getWidth() const
@@ -30,15 +20,16 @@ int Image::getHeight() const
     return this->height;
 }
 
-vector<Pixel> Image::getPixels() const
+uint8_t* Image::getPixels() const
 {
     return this->pixels;
 }
 
-uint8_t* Image::rgb_array()
+/*uint8_t* Image::rgb_array()
 {
+    printf("go\n");
     uint8_t* rgb_image;
-    rgb_image = malloc(this->width*this->height*3);
+    rgb_image = (uint8_t*) malloc(this->width*this->height*3);
 
 
     for(int i=0; i < this->width * this->height*3; i++)
@@ -57,8 +48,13 @@ uint8_t* Image::rgb_array()
         }
 
     }
+    printf("terminer\n");
 
     return rgb_image;
+}*/
+
+uint8_t& Image::operator() (int x, int y, int color){
+    return this->pixels[(x + y * this->width) * 3 + color];
 }
 
 Image::~Image()

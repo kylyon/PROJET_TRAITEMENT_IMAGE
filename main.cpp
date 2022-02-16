@@ -1,28 +1,27 @@
 #include <stdint.h>
-#include "Image.h"
-#include "Pixel.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "lib/stb/stb_image.h"
-#include "lib/stb/stb_image_write.h"
+#include "Image.cpp"
+#include "Pixel.cpp"
+
+using namespace std;
 
 int main() {
     Image im = Image("ciel.jpg");
 
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
 
-    for(int i=0; i < im.getWidth() * im.getHeight() * 3; i++)
+    for(int i=0; i < 30; i++)
     {
-
-        //printf("%d % 3  = %d \n", i, i%3);
-        if(i%3 == 2)
+        for(int j=0; j < 30; j++)
         {
-            im.getPixels()[i].setBlue(0);
+            //printf("%d - %d", i, im.getPixels()[i].getBlue());
+            im(i,j, RED) -= 50;
+            //printf(" - %d\n", im.getPixels()[i].getBlue());
         }
+
     }
 
-    stbi_write_png("image.jpg", im.getWidth(), im.getHeight(), 3, im.rgb_array(), im.getHeight()*3);
+    stbi_write_png("image.jpg", im.getWidth(), im.getHeight(), 3, im.getPixels(), im.getHeight()*3);
 
     stbi_image_free(im.getPixels());
 
