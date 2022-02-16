@@ -7,7 +7,28 @@ using namespace std;
 
 Image::Image(char* filename)
 {
-    this->pixels = stbi_load("ciel.jpg", &this->width, &this->height, &this->bpp, 3);
+    this->pixels = stbi_load(filename, &this->width, &this->height, &this->bpp, 3);
+    this->offsetX = 0;
+    this->offsetY = 0;
+}
+
+Image::Image(int height, int width)
+{
+    this->pixels = (uint8_t*) malloc(width*height*3);
+    this->offsetX = 0;
+    this->offsetY = 0;
+    this->width = width;
+    this->height = height;
+    /*for(int i=0; i < this->getWidth(); i++)
+    {
+        for(int j=0; j < this->getHeight(); j++)
+        {
+            this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + RED] = 0;
+            this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + GREEN] = 0;
+            this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + BLUE] = 0;
+        }
+    }*/
+
 }
 
 int Image::getWidth() const
@@ -54,7 +75,24 @@ uint8_t* Image::getPixels() const
 }*/
 
 uint8_t& Image::operator() (int x, int y, int color){
-    return this->pixels[(x + y * this->width) * 3 + color];
+    return this->pixels[( (x + offsetX) + (offsetY + y) * this->width) * 3 + color];
+}
+
+void const Image::save(char* filename) const
+{
+    stbi_write_png(filename, this->getWidth(), this->getHeight(), 3, this->getPixels(), this->getHeight()*3);
+}
+
+void Image::crop(int top, int bottom, int left, int right)
+{
+    int tempWidth = right - left;
+    int tempHeight = bottom - top;
+
+    this->offsetX = left;
+    this->offsetY = top;
+
+    this->width = tempWidth;
+    this->height = tempHeight;
 }
 
 Image::~Image()
