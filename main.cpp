@@ -35,9 +35,12 @@ int main() {
     Image test = getBackground(images);
     test.save("back.jpg");
 
+    Image cop = im.mask(test);
+    cop.save("mask.png");
+
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
 
-    for(int i=0; i < 30; i++)
+    /*for(int i=0; i < 30; i++)
     {
         for(int j=0; j < 30; j++)
         {
@@ -48,7 +51,7 @@ int main() {
 
     }
     //im.crop(0,100,0,100);
-    im.save("image.jpg");
+    im.save("image.jpg");*/
 
     stbi_image_free(im.getPixels());
 

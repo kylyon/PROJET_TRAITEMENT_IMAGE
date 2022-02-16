@@ -95,6 +95,28 @@ void Image::crop(int top, int bottom, int left, int right)
     this->height = tempHeight;
 }
 
+Image Image::mask(Image background)
+{
+    Image cop = Image(this->getHeight(), this->getWidth());
+
+    for(int i=0; i < this->getWidth(); i++)
+    {
+        for(int j=0; j < this->getHeight(); j++)
+        {
+            if(this->pixels[(i + j * this->width) * 3 + RED] == background(i,j,RED) && this->pixels[(i + j * this->width) * 3 + GREEN] == background(i,j,GREEN) && this->pixels[(i + j * this->width) * 3 + BLUE] == background(i,j,BLUE))
+            {
+                cop(i,j,ALPHA) = 0;
+            }else{
+                cop(i,j,ALPHA) = 255;
+                cop(i,j,RED) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + RED];
+                cop(i,j,GREEN) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + GREEN];
+                cop(i,j,BLUE) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + BLUE];
+           }
+        }
+    }
+    return cop;
+}
+
 Image::~Image()
 {
     //dtor
