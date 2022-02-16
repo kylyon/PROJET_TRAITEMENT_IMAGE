@@ -7,14 +7,14 @@ using namespace std;
 
 Image::Image(char* filename)
 {
-    this->pixels = stbi_load(filename, &this->width, &this->height, &this->bpp, 3);
+    this->pixels = stbi_load(filename, &this->width, &this->height, &this->bpp, 4);
     this->offsetX = 0;
     this->offsetY = 0;
 }
 
 Image::Image(int height, int width)
 {
-    this->pixels = (uint8_t*) malloc(width*height*3);
+    this->pixels = (uint8_t*) malloc(width*height*4);
     this->offsetX = 0;
     this->offsetY = 0;
     this->width = width;
@@ -75,12 +75,12 @@ uint8_t* Image::getPixels() const
 }*/
 
 uint8_t& Image::operator() (int x, int y, int color){
-    return this->pixels[( (x + offsetX) + (offsetY + y) * this->width) * 3 + color];
+    return this->pixels[( (x + offsetX) + (offsetY + y) * this->width) * 4 + color];
 }
 
 void const Image::save(char* filename) const
 {
-    stbi_write_png(filename, this->getWidth(), this->getHeight(), 3, this->getPixels(), this->getHeight()*3);
+    stbi_write_png(filename, this->getWidth(), this->getHeight(), 4, this->getPixels(), this->getWidth()*4);
 }
 
 void Image::crop(int top, int bottom, int left, int right)

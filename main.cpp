@@ -14,37 +14,30 @@ Image getBackground(vector<Image> images);
 int main() {
     vector<Image> images = vector<Image>();
 
-    Image im = Image("ciel.jpg");
-    Image im1 = Image("ciel1.jpg");
-    Image im2 = Image("ciel2.jpg");
-    Image im3 = Image("ciel3.jpg");
-    Image im4 = Image("ciel4.jpg");
+    Image im = Image("Image/image1.jpg");
+    Image im1 = Image("Image/image2.jpg");
+    Image im2 = Image("Image/image3.jpg");
+    Image im3 = Image("Image/image4.jpg");
+    Image im4 = Image("Image/image5.jpg");
+    Image im5 = Image("Image/image6.jpg");
+    Image im6 = Image("Image/image7.jpg");
+    Image im7 = Image("Image/image8.jpg");
 
     images.push_back(im);
     images.push_back(im1);
     images.push_back(im2);
     images.push_back(im3);
     images.push_back(im4);
-
-    /*printf("** ");
-    for(int i=0; i < im.getWidth(); i++)
-    {
-        //printf("%d\n", i);
-        for(int j=0; j < im.getHeight(); j++)
-        {
-            for(int k=0; k < images.size(); k++){
-                printf("%d, ", images[k](i,j,RED));
-            }
-             printf("\n");
-        }
-    }*/
+    images.push_back(im5);
+    images.push_back(im6);
+    images.push_back(im7);
 
     Image test = getBackground(images);
     test.save("back.jpg");
 
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
 
-    /*for(int i=0; i < 30; i++)
+    for(int i=0; i < 30; i++)
     {
         for(int j=0; j < 30; j++)
         {
@@ -53,7 +46,7 @@ int main() {
             //printf(" - %d\n", im.getPixels()[i].getBlue());
         }
 
-    }*/
+    }
     //im.crop(0,100,0,100);
     im.save("image.jpg");
 
@@ -66,7 +59,7 @@ Image getBackground(vector<Image> images)
 {
 
     Image im = Image(images[0].getHeight(), images[0].getWidth());
-    printf("%d %d %d \n", im(0,0,RED), im(0,0,GREEN),im(0,0,BLUE));
+    printf("%d %d %d %d \n", im(0,0,RED), im(0,0,GREEN),im(0,0,BLUE), im(0,0,ALPHA));
 
     for(int i=0; i < im.getWidth(); i++)
     {
@@ -94,6 +87,7 @@ Image getBackground(vector<Image> images)
             im(i,j,RED) = medR;
             im(i,j,GREEN) = medG;
             im(i,j,BLUE) = medB;
+            im(i,j,ALPHA) = 255;
 
         }
 
