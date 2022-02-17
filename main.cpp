@@ -34,17 +34,15 @@ int main(int argc, char *argv[]) {
     images.push_back(im6);
     images.push_back(im7);
 
-<<<<<<< Updated upstream
+
     Image test = getBackground(images);
     test.save("back.jpg");
 
     Image cop = im.mask(test);
     cop.save("mask.png");
-=======
+
     Image result = setResult(background, images.size(), 3);
     result.save("Result/resultat.png");
->>>>>>> Stashed changes
-
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
 
     /*for(int i=0; i < 30; i++)
@@ -65,8 +63,6 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-<<<<<<< Updated upstream
-=======
 Image setResult(Image background, int sizes, int saut) {
     Image result = background;
     vector<Image> masks = vector<Image>();
@@ -99,7 +95,6 @@ Image setResult(Image background, int sizes, int saut) {
     return result;
 }
 
->>>>>>> Stashed changes
 Image getBackground(vector<Image> images)
 {
 
