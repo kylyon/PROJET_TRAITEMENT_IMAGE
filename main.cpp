@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string>
 
 #include "Image.cpp"
 #include "Pixel.cpp"
@@ -14,14 +15,18 @@ Image getBackground(vector<Image> images);
 int main() {
     vector<Image> images = vector<Image>();
 
-    Image im = Image("Image/image1.jpg");
-    Image im1 = Image("Image/image2.jpg");
-    Image im2 = Image("Image/image3.jpg");
-    Image im3 = Image("Image/image4.jpg");
-    Image im4 = Image("Image/image5.jpg");
-    Image im5 = Image("Image/image6.jpg");
-    Image im6 = Image("Image/image7.jpg");
-    Image im7 = Image("Image/image8.jpg");
+    Image im = Image("Image/image1.png");
+    Image im1 = Image("Image/image2.png");
+    Image im2 = Image("Image/image3.png");
+    Image im3 = Image("Image/image4.png");
+    Image im4 = Image("Image/image5.png");
+    Image im5 = Image("Image/image6.png");
+    Image im6 = Image("Image/image7.png");
+    Image im7 = Image("Image/image8.png");
+    Image im8 = Image("Image/image9.png");
+    Image im9 = Image("Image/image10.png");
+    Image im10 = Image("Image/image11.png");
+
 
     images.push_back(im);
     images.push_back(im1);
@@ -31,13 +36,22 @@ int main() {
     images.push_back(im5);
     images.push_back(im6);
     images.push_back(im7);
+    images.push_back(im8);
+    images.push_back(im9);
+    images.push_back(im10);
 
-    Image test = getBackground(images);
-    test.save("back.jpg");
+    Image background = getBackground(images);
+    background.save("Result/backresult.png");
 
-    Image cop = im.mask(test);
-    cop.save("mask.png");
+    for(int i = 0; i < images.size(); i++) {
+        Image cop = images[i].mask(background);
+        string path = "Result/mask";
+        path.append(to_string(i));
+        path.append(".png");
+        cop.save(&path[0]);
+    }
 
+    // Tout les deux
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
 
     /*for(int i=0; i < 30; i++)
@@ -60,10 +74,8 @@ int main() {
 
 Image getBackground(vector<Image> images)
 {
-
     Image im = Image(images[0].getHeight(), images[0].getWidth());
     printf("%d %d %d %d \n", im(0,0,RED), im(0,0,GREEN),im(0,0,BLUE), im(0,0,ALPHA));
-
     for(int i=0; i < im.getWidth(); i++)
     {
         for(int j=0; j < im.getHeight(); j++)
@@ -71,7 +83,6 @@ Image getBackground(vector<Image> images)
             vector<int> moyR = vector<int>();
             vector<int> moyG = vector<int>();
             vector<int> moyB = vector<int>();
-
 
             for(int k=0; k < images.size(); k++){
                 moyR.push_back(images[k](i,j,RED));
@@ -91,10 +102,7 @@ Image getBackground(vector<Image> images)
             im(i,j,GREEN) = medG;
             im(i,j,BLUE) = medB;
             im(i,j,ALPHA) = 255;
-
         }
-
     }
-
     return im;
 }

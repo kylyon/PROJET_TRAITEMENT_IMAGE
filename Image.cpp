@@ -99,19 +99,19 @@ Image Image::mask(Image background)
 {
     Image cop = Image(this->getHeight(), this->getWidth());
 
-    for(int i=0; i < this->getWidth(); i++)
-    {
-        for(int j=0; j < this->getHeight(); j++)
-        {
-            if(this->pixels[(i + j * this->width) * 3 + RED] == background(i,j,RED) && this->pixels[(i + j * this->width) * 3 + GREEN] == background(i,j,GREEN) && this->pixels[(i + j * this->width) * 3 + BLUE] == background(i,j,BLUE))
-            {
+    for(int i=0; i < cop.getWidth(); i++) {
+        for(int j=0; j < cop.getHeight(); j++) {
+            if(this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + RED] == background(i,j,RED) && this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + GREEN] == background(i,j,GREEN) && this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + BLUE] == background(i,j,BLUE) && this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + ALPHA] == background(i,j,ALPHA)) {
                 cop(i,j,ALPHA) = 0;
-            }else{
-                cop(i,j,ALPHA) = 255;
-                cop(i,j,RED) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + RED];
-                cop(i,j,GREEN) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + GREEN];
-                cop(i,j,BLUE) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + BLUE];
-           }
+                cop(i,j,RED) = 0;
+                cop(i,j,GREEN) = 0;
+                cop(i,j,BLUE) = 0;
+            } else {
+                cop(i,j,ALPHA) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + ALPHA];
+                cop(i,j,RED) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + RED];
+                cop(i,j,GREEN) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + GREEN];
+                cop(i,j,BLUE) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + BLUE];
+            }
         }
     }
     return cop;
