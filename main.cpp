@@ -11,6 +11,7 @@ using std::vector;
 using namespace std;
 
 Image getBackground(vector<Image> images);
+Image setResult(Image background, int sizes, int saut);
 
 int main() {
     vector<Image> images = vector<Image>();
@@ -51,6 +52,9 @@ int main() {
         cop.save(&path[0]);
     }
 
+    Image result = setResult(background, images.size(), 1);
+    result.save("Result/resultat.png");
+
     // Tout les deux
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
 
@@ -70,6 +74,34 @@ int main() {
     stbi_image_free(im.getPixels());
 
     return 0;
+}
+
+Image setResult(Image background, int sizes, int saut) {
+    Image result = background;
+    vector<Image> masks = vector<Image>();
+    for(int i = 0; i < sizes; i++) {
+        string path = "Result/mask";
+        path.append(to_string(i));
+        path.append(".png");
+        masks.push_back(Image(&path[0]));
+    }
+    // Liste background
+    for(int i = 0; i < masks.size(); i+=saut) {
+        printf("test %d \n", i);
+        for(int x=0; x < result.getWidth(); x++) {
+            for(int y = 0; y < result.getHeight(); y++) {
+                if(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0) {
+                } else {
+                    result(x, y, RED) = masks[i](x, y, RED);
+                    result(x, y, GREEN) = masks[i](x, y, GREEN);
+                    result(x, y, BLUE) = masks[i](x, y, BLUE);
+                    result(x, y, ALPHA) = masks[i](x, y, ALPHA);
+                }
+            }
+        }
+    }
+    // Check par rapport au saut quel mask faire, for par rapport a masks.size avec un i + = saut a chaque fin de boucle
+    return result;
 }
 
 Image getBackground(vector<Image> images)
