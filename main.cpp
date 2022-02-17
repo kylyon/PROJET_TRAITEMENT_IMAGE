@@ -11,7 +11,9 @@ using namespace std;
 
 Image getBackground(vector<Image> images);
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    printf("%s\n", argv[1]);
     vector<Image> images = vector<Image>();
 
     Image im = Image("Image/image1.jpg");
@@ -32,11 +34,16 @@ int main() {
     images.push_back(im6);
     images.push_back(im7);
 
+<<<<<<< Updated upstream
     Image test = getBackground(images);
     test.save("back.jpg");
 
     Image cop = im.mask(test);
     cop.save("mask.png");
+=======
+    Image result = setResult(background, images.size(), 3);
+    result.save("Result/resultat.png");
+>>>>>>> Stashed changes
 
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
 
@@ -58,6 +65,41 @@ int main() {
     return 0;
 }
 
+<<<<<<< Updated upstream
+=======
+Image setResult(Image background, int sizes, int saut) {
+    Image result = background;
+    vector<Image> masks = vector<Image>();
+    for(int i = 0; i < sizes; i++) {
+        string path = "Result/mask";
+        path.append(to_string(i));
+        path.append(".png");
+        masks.push_back(Image(&path[0]));
+    }
+    // Liste background
+    float opacity = 0;
+    float stepOpacity = 1.0f / (masks.size()/saut);
+    for(int i = 0; i < masks.size(); i+=saut) {
+        printf("test %d \n", i);
+        for(int x=0; x < result.getWidth(); x++) {
+            for(int y = 0; y < result.getHeight(); y++) {
+                if(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0) {
+                } else {
+                    result(x, y, RED) = abs((int) masks[i](x, y, RED) - (int)((masks[i](x, y, RED) - result(x, y, RED)) * opacity));
+                    result(x, y, GREEN) = abs((int) masks[i](x, y, GREEN) - (int)((masks[i](x, y, GREEN) - result(x, y, GREEN)) * opacity));
+                    result(x, y, BLUE) = abs((int) masks[i](x, y, BLUE) - (int)((masks[i](x, y, BLUE) - result(x, y, BLUE)) * opacity));
+                    result(x, y, ALPHA) = 255;
+
+                }
+            }
+        }
+        opacity += stepOpacity;
+    }
+    // Check par rapport au saut quel mask faire, for par rapport a masks.size avec un i + = saut a chaque fin de boucle
+    return result;
+}
+
+>>>>>>> Stashed changes
 Image getBackground(vector<Image> images)
 {
 
