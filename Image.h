@@ -1,6 +1,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 #include <vector>
+#include <string>
 #include "Pixel.h"
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -13,6 +14,7 @@
 #define ALPHA 3
 
 using std::vector;
+using std::string;
 
 class Image
 {
@@ -28,6 +30,7 @@ class Image
         void const save(char* filename) const;
         void crop(int top,int bottom,int left,int right);
         Image mask(Image background);
+        int getCenter(string cen);
 
 
     protected:

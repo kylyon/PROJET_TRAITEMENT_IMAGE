@@ -1,8 +1,10 @@
 #include "Image.h"
 #include "Pixel.h"
 #include <vector>
+#include <string>
 
 using std::vector;
+using std::string;
 using namespace std;
 
 Image::Image(char* filename)
@@ -15,16 +17,6 @@ Image::Image(int height, int width)
     this->pixels = (uint8_t*) malloc(width*height*4);
     this->width = width;
     this->height = height;
-    /*for(int i=0; i < this->getWidth(); i++)
-    {
-        for(int j=0; j < this->getHeight(); j++)
-        {
-            this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + RED] = 0;
-            this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + GREEN] = 0;
-            this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 3 + BLUE] = 0;
-        }
-    }*/
-
 }
 
 int Image::getWidth() const
@@ -41,34 +33,6 @@ uint8_t* Image::getPixels() const
 {
     return this->pixels;
 }
-
-/*uint8_t* Image::rgb_array()
-{
-    printf("go\n");
-    uint8_t* rgb_image;
-    rgb_image = (uint8_t*) malloc(this->width*this->height*3);
-
-
-    for(int i=0; i < this->width * this->height*3; i++)
-    {
-        switch(i%3)
-        {
-            case 0:
-                rgb_image[i] = this->pixels[int(i/3)].getRed();
-                break;
-            case 1:
-                rgb_image[i] = this->pixels[int(i/3)].getGreen();
-                break;
-            case 2:
-                rgb_image[i] = this->pixels[int(i/3)].getBlue();
-                break;
-        }
-
-    }
-    printf("terminer\n");
-
-    return rgb_image;
-}*/
 
 uint8_t& Image::operator() (int x, int y, int color){
     return this->pixels[( x + y * this->width) * 4 + color];
@@ -123,6 +87,35 @@ Image Image::mask(Image background)
         }
     }
     return cop;
+}
+
+int Image::getCenter(string cen) {
+    int xmax = 0, xmin = this->getWidth(), ymin = this->getHeight(), ymax = 0;
+
+    for(int y = 0; y < this->getHeight(); y++) {
+        for(int x = 0; x < this->getWidth(); x++) {
+            if(!(this->pixels[( x + y * this->width) * 4 + RED] == 0 && this->pixels[( x + y * this->width) * 4 + GREEN] == 0 && this->pixels[( x + y * this->width) * 4 + BLUE] == 0 && this->pixels[( x + y * this->width) * 4 + ALPHA] == 0)) {
+                if(x > xmax) {
+                    xmax = x;
+                }
+                if(x < xmin) {
+                    xmin = x;
+                }
+                if(y > ymax) {
+                    ymax = y;
+                }
+                if(y < ymin) {
+                    ymin = y;
+                }
+            }
+        }
+    }
+
+    if(cen == "x") {
+        return int((xmin+xmax)/2);
+    } else if(cen == "y") {
+        return int((ymin+ymax)/2);
+    }
 }
 
 Image::~Image()

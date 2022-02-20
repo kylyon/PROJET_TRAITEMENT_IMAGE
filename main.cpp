@@ -14,15 +14,15 @@ using std::string;
 using namespace std;
 
 Image getBackground(vector<Image> images, bool verbose);
-Image setResult(Image background, vector<Image> masks, int sizes, int saut);
+Image setResult(Image background, vector<Image> masks, int sizes, string mode, int value);
 vector<Image> normalize(vector<Image> images);
 vector<Image> getMasks(vector<Image> images, Image background, bool verbose);
 int getResultPixel(Image background, Image mask, int x, int y, int channel, string fading, float opacity);
 
 bool verbose = false;
 string fading = "normal";
-string mode = "normal";
-int saut = 1;
+string mode = "distance";
+int saut = 300;
 
 int main(int argc, char *argv[]) {
     if(argc != 5 && argc != 1)
@@ -62,17 +62,17 @@ int main(int argc, char *argv[]) {
 
     vector<Image> images = vector<Image>();
 
-    Image im = Image("Image/image1.png");
-    Image im1 = Image("Image/image2.png");
-    Image im2 = Image("Image/image3.png");
-    Image im3 = Image("Image/image4.png");
-    Image im4 = Image("Image/image5.png");
-    Image im5 = Image("Image/image6.png");
-    Image im6 = Image("Image/image7.png");
-    Image im7 = Image("Image/image8.png");
-    Image im8 = Image("Image/image9.png");
-    Image im9 = Image("Image/image10.png");
-    Image im10 = Image("Image/image11.png");
+    Image im = Image("Image/vertical/image1.png");
+    Image im1 = Image("Image/vertical/image2.png");
+    Image im2 = Image("Image/vertical/image3.png");
+    Image im3 = Image("Image/vertical/image4.png");
+    Image im4 = Image("Image/vertical/image5.png");
+    Image im5 = Image("Image/vertical/image6.png");
+    Image im6 = Image("Image/vertical/image7.png");
+    Image im7 = Image("Image/vertical/image8.png");
+    Image im8 = Image("Image/vertical/image9.png");
+    //Image im9 = Image("Image/image10.png");
+    //Image im10 = Image("Image/image11.png");
 
 
     images.push_back(im);
@@ -84,60 +84,77 @@ int main(int argc, char *argv[]) {
     images.push_back(im6);
     images.push_back(im7);
     images.push_back(im8);
-    images.push_back(im9);
-    images.push_back(im10);
+    //images.push_back(im9);
+    //images.push_back(im10);
 
-    printf("Saut : %d\n", saut);
     Image background = getBackground(images, verbose);
 
     vector<Image> masks = getMasks(images,background, verbose);
 
-    Image result = setResult(background,masks, images.size(), saut);
+    Image result = setResult(background, masks, images.size(), mode, saut);
     result.save("Result/resultat.png");
-
-
-    // Tout les deux
-    printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
-
-    /*for(int i=0; i < 30; i++)
-    {
-        for(int j=0; j < 30; j++)
-        {
-            //printf("%d - %d", i, im.getPixels()[i].getBlue());
-            im(i,j, RED) -= 50;
-            //printf(" - %d\n", im.getPixels()[i].getBlue());
-        }
-
-    }
-    im.crop(0,100,0,100);
-    im.save("image.jpg");
-    printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());*/
 
     stbi_image_free(im.getPixels());
 
     return 0;
 }
 
-Image setResult(Image background, vector<Image> masks, int sizes, int saut) {
+Image setResult(Image background, vector<Image> masks, int sizes, string mode, int value) {
     Image result = background;
     float opacity = 0;
-    float stepOpacity = 1.0f / (masks.size()/saut);
+    float stepOpacity = 1.0f / (masks.size()/value);
 
     // Liste background
-    for(int i = 0; i < masks.size(); i+=saut) {
-        //printf("test %d \n", i);
+    if(mode == "step" || mode == "normal") {
+        for(int i = 0; i < masks.size(); i+=value) {
+            for(int x=0; x < result.getWidth(); x++) {
+                for(int y = 0; y < result.getHeight(); y++) {
+                    if(!(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0)) {
+                        result(x, y, RED) = getResultPixel(result, masks[i], x, y, RED, fading, opacity);
+                        result(x, y, GREEN) = getResultPixel(result, masks[i], x, y, GREEN, fading, opacity);
+                        result(x, y, BLUE) = getResultPixel(result, masks[i], x, y, BLUE, fading, opacity);
+                        result(x, y, ALPHA) = masks[i](x, y, ALPHA);
+                    }
+                }
+            }
+            opacity += stepOpacity;
+        }
+    } else if(mode == "distance") {
+        printf("distance mode \n");
         for(int x=0; x < result.getWidth(); x++) {
             for(int y = 0; y < result.getHeight(); y++) {
-                if(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0) {
-                } else {
-                    result(x, y, RED) = getResultPixel(result, masks[i], x, y, RED, fading, opacity);
-                    result(x, y, GREEN) = getResultPixel(result, masks[i], x, y, GREEN, fading, opacity);
-                    result(x, y, BLUE) = getResultPixel(result, masks[i], x, y, BLUE, fading, opacity);
-                    result(x, y, ALPHA) = masks[i](x, y, ALPHA);
+                if(!(masks[0](x, y, RED) == 0 && masks[0](x, y, GREEN) == 0 && masks[0](x, y, BLUE) == 0 && masks[0](x, y, ALPHA) == 0)) {
+                    result(x, y, RED) = getResultPixel(result, masks[0], x, y, RED, fading, opacity);
+                    result(x, y, GREEN) = getResultPixel(result, masks[0], x, y, GREEN, fading, opacity);
+                    result(x, y, BLUE) = getResultPixel(result, masks[0], x, y, BLUE, fading, opacity);
+                    result(x, y, ALPHA) = masks[0](x, y, ALPHA);
                 }
             }
         }
-        opacity += stepOpacity;
+        int v = 0;
+        for(int i = 1; i < masks.size(); i++) {
+            int xcenterV = masks[v].getCenter("x");
+            int xcenterI = masks[i].getCenter("x");
+            int ycenterV = masks[v].getCenter("y");
+            int ycenterI = masks[i].getCenter("y");
+            if(abs(sqrt(pow((xcenterV - xcenterI), 2) + pow((ycenterV - ycenterI), 2))) > value) {
+                for(int x=0; x < result.getWidth(); x++) {
+                    for(int y = 0; y < result.getHeight(); y++) {
+                        if(!(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0)) {
+                            result(x, y, RED) = getResultPixel(result, masks[i], x, y, RED, fading, opacity);
+                            result(x, y, GREEN) = getResultPixel(result, masks[i], x, y, GREEN, fading, opacity);
+                            result(x, y, BLUE) = getResultPixel(result, masks[i], x, y, BLUE, fading, opacity);
+                            result(x, y, ALPHA) = masks[i](x, y, ALPHA);
+                        }
+                    }
+                }
+                opacity += stepOpacity;
+                v = i;
+            }
+        }
+    } else {
+        printf("Erreur: Mode choisi inconnu!");
+        return nullptr;
     }
     // Check par rapport au saut quel mask faire, for par rapport a masks.size avec un i + = saut a chaque fin de boucle
     return result;
