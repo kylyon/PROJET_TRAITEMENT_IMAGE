@@ -23,6 +23,7 @@ Image setResult(Image background, vector<Image> masks, int sizes, string mode, i
 vector<Image> normalize(vector<Image> images);
 vector<Image> getMasks(vector<Image> images, Image background, bool verbose);
 int getResultPixel(Image background, Image mask, int x, int y, int channel, string fading, float opacity);
+vector<Image> getBlur(vector<Image> images, bool verbose);
 
 char* path = "Image/vertical";
 bool verbose = false;
@@ -121,17 +122,7 @@ int main(int argc, char *argv[]) {
 
 
     vector<Image> images = getImagesFromDisk(path);
-    vector<Image> blur = vector<Image>();
-
-    for(int i = 0; i < images.size(); i++)
-    {
-        Image temp = images[i].medianBlur(1);
-        string path = "Result/blur";
-        path.append(to_string(i));
-        path.append(".png");
-        temp.save(&path[0]);
-        blur.push_back(temp);
-    }
+    vector<Image> blur = getBlur(images,verbose);
 
     if(!images.size())
     {
@@ -143,7 +134,7 @@ int main(int argc, char *argv[]) {
 
     vector<Image> masks = getMasks(blur,background, verbose);
 
-    Image result = setResult(background, masks, blur.size(), mode, saut);
+    Image result = setResult(background, masks, masks.size(), mode, saut);
     result.save("Result/resultat.png");
 
     //stbi_image_free(im.getPixels());
@@ -183,7 +174,7 @@ Image setResult(Image background, vector<Image> masks, int sizes, string mode, i
             int xcenterI = masks[i].getCenter("x");
             int ycenterV = masks[v].getCenter("y");
             int ycenterI = masks[i].getCenter("y");
-            if(abs(sqrt(pow((xcenterV - xcenterI), 2) + pow((ycenterV - ycenterI), 2))) > value) {
+            if(abs(sqrt(pow((xcenterV - xcenterI), 2) + pow((ycenterV - ycenterI), 2))) < value) {
                 continue;
             }
         }
@@ -284,11 +275,30 @@ vector<Image> normalize(vector<Image> images)
     return images;
 }
 
+vector<Image> getBlur(vector<Image> images, bool verbose)
+{
+    vector<Image> listBlur = vector<Image>();
+    for(int i = 0; i < images.size(); i++)
+    {
+        Image temp = images[i].medianBlur(1);
+        listBlur.push_back(temp);
+        if(verbose)
+        {
+            string path = "Result/blur";
+            path.append(to_string(i));
+            path.append(".png");
+            temp.save(&path[0]);
+        }
+    }
+
+    return listBlur;
+}
+
 vector<Image> getMasks(vector<Image> images, Image background,  bool verbose)
 {
     vector<Image> masks = vector<Image>();
     for(int i = 0; i < images.size(); i++) {
-        Image cop = images[i].mask(background, 50);
+        Image cop = images[i].mask(background, 100);
         if(verbose)
         {
             string path = "Result/mask";
