@@ -6,14 +6,60 @@
 
 #include <vector>
 #include <bits/stdc++.h>
+#include <string>
+#include <sstream>
 
 using std::vector;
+using std::string;
 using namespace std;
 
-Image getBackground(vector<Image> images);
-Image setResult(Image background, int sizes, int saut);
+Image getBackground(vector<Image> images, bool verbose);
+Image setResult(Image background, vector<Image> masks, int sizes, int saut);
+vector<Image> normalize(vector<Image> images);
+vector<Image> getMasks(vector<Image> images, Image background, bool verbose);
+int getResultPixel(Image background, Image mask, int x, int y, int channel, string fading, float opacity);
 
-int main() {
+bool verbose = false;
+string fading = "normal";
+string mode = "normal";
+int saut = 1;
+
+int main(int argc, char *argv[]) {
+    if(argc != 5 && argc != 1)
+    {
+        printf("Veuillez renseigner les 3 parametres :\n");
+        printf("    verbose : true ou false\n");
+        printf("    fading : normal ou fading ou reverse\n");
+        printf("    mode : normal ou step ou distance\n");
+        printf("    mode value : valeur pour le mode choisi (Ex : mode value = 2 avec le mode step veut dire un pas de 2\n");
+        return 0;
+    }
+
+    vector<string> all_args;
+
+    if (argc > 1) {
+        all_args.assign(argv, argv + argc);
+    }
+
+
+    if(argc != 1)
+    {
+        std::stringstream ssVerbose(all_args[1]);
+        bool verbose;
+
+
+        if(!(ssVerbose >> std::boolalpha >> verbose)) {
+            printf("L'argument verbose doit avoir comme valeur true or false\n");
+        }
+
+        fading = all_args[2];
+        mode = all_args[3];
+        saut = stoi(all_args[4]);
+    }
+
+
+
+
     vector<Image> images = vector<Image>();
 
     Image im = Image("Image/image1.png");
@@ -41,19 +87,14 @@ int main() {
     images.push_back(im9);
     images.push_back(im10);
 
-    Image background = getBackground(images);
-    background.save("Result/backresult.png");
+    printf("Saut : %d\n", saut);
+    Image background = getBackground(images, verbose);
 
-    for(int i = 0; i < images.size(); i++) {
-        Image cop = images[i].mask(background);
-        string path = "Result/mask";
-        path.append(to_string(i));
-        path.append(".png");
-        cop.save(&path[0]);
-    }
+    vector<Image> masks = getMasks(images,background, verbose);
 
-    Image result = setResult(background, images.size(), 1);
+    Image result = setResult(background,masks, images.size(), saut);
     result.save("Result/resultat.png");
+
 
     // Tout les deux
     printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());
@@ -68,43 +109,54 @@ int main() {
         }
 
     }
-    //im.crop(0,100,0,100);
-    im.save("image.jpg");*/
+    im.crop(0,100,0,100);
+    im.save("image.jpg");
+    printf("Width : %d - Height : %d", im.getWidth(), im.getHeight());*/
 
     stbi_image_free(im.getPixels());
 
     return 0;
 }
 
-Image setResult(Image background, int sizes, int saut) {
+Image setResult(Image background, vector<Image> masks, int sizes, int saut) {
     Image result = background;
-    vector<Image> masks = vector<Image>();
-    for(int i = 0; i < sizes; i++) {
-        string path = "Result/mask";
-        path.append(to_string(i));
-        path.append(".png");
-        masks.push_back(Image(&path[0]));
-    }
+    float opacity = 0;
+    float stepOpacity = 1.0f / (masks.size()/saut);
+
     // Liste background
     for(int i = 0; i < masks.size(); i+=saut) {
-        printf("test %d \n", i);
+        //printf("test %d \n", i);
         for(int x=0; x < result.getWidth(); x++) {
             for(int y = 0; y < result.getHeight(); y++) {
                 if(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0) {
                 } else {
-                    result(x, y, RED) = masks[i](x, y, RED);
-                    result(x, y, GREEN) = masks[i](x, y, GREEN);
-                    result(x, y, BLUE) = masks[i](x, y, BLUE);
+                    result(x, y, RED) = getResultPixel(result, masks[i], x, y, RED, fading, opacity);
+                    result(x, y, GREEN) = getResultPixel(result, masks[i], x, y, GREEN, fading, opacity);
+                    result(x, y, BLUE) = getResultPixel(result, masks[i], x, y, BLUE, fading, opacity);
                     result(x, y, ALPHA) = masks[i](x, y, ALPHA);
                 }
             }
         }
+        opacity += stepOpacity;
     }
     // Check par rapport au saut quel mask faire, for par rapport a masks.size avec un i + = saut a chaque fin de boucle
     return result;
 }
 
-Image getBackground(vector<Image> images)
+int getResultPixel(Image result, Image mask, int x, int y, int channel, string fading, float opacity)
+{
+    if(fading == "fading")
+    {
+        return abs((int) result(x, y, channel) - (int)((result(x, y, channel) - mask(x, y, channel)) * opacity));
+    }
+    if(fading == "reverse")
+    {
+        return abs((int) mask(x, y, channel) - (int)((mask(x, y, channel) - result(x, y, channel)) * opacity));
+    }
+    return mask(x, y, channel);
+}
+
+Image getBackground(vector<Image> images, bool verbose)
 {
     Image im = Image(images[0].getHeight(), images[0].getWidth());
     printf("%d %d %d %d \n", im(0,0,RED), im(0,0,GREEN),im(0,0,BLUE), im(0,0,ALPHA));
@@ -136,5 +188,51 @@ Image getBackground(vector<Image> images)
             im(i,j,ALPHA) = 255;
         }
     }
+
+    if(verbose)
+    {
+        im.save("Result/backresult.png");
+    }
+
     return im;
+}
+
+vector<Image> normalize(vector<Image> images)
+{
+    int minW = images[0].getWidth();
+    int minH = images[0].getHeight();
+    int maxW = images[0].getWidth();
+    int maxH = images[0].getHeight();
+
+    for(int i=1; i<images.size(); i++){
+        minW = minW > images[i].getWidth() ? images[i].getWidth() : minW;
+        minH = minH > images[i].getHeight() ? images[i].getHeight() : minH;
+        maxW = maxW < images[i].getWidth() ? images[i].getWidth() : maxW;
+        maxH = maxH < images[i].getHeight() ? images[i].getHeight() : maxH;
+    }
+
+    if(!(minW == maxW && minH == maxH)){
+        for(int i=0; i<images.size(); i++){
+            images[i].crop(0,minH, 0, minW);
+        }
+    }
+
+    return images;
+}
+
+vector<Image> getMasks(vector<Image> images, Image background,  bool verbose)
+{
+    vector<Image> masks = vector<Image>();
+    for(int i = 0; i < images.size(); i++) {
+        Image cop = images[i].mask(background);
+        if(verbose)
+        {
+            string path = "Result/mask";
+            path.append(to_string(i));
+            path.append(".png");
+            cop.save(&path[0]);
+        }
+        masks.push_back(cop);
+    }
+    return masks;
 }

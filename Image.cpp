@@ -8,15 +8,11 @@ using namespace std;
 Image::Image(char* filename)
 {
     this->pixels = stbi_load(filename, &this->width, &this->height, &this->bpp, 4);
-    this->offsetX = 0;
-    this->offsetY = 0;
 }
 
 Image::Image(int height, int width)
 {
     this->pixels = (uint8_t*) malloc(width*height*4);
-    this->offsetX = 0;
-    this->offsetY = 0;
     this->width = width;
     this->height = height;
     /*for(int i=0; i < this->getWidth(); i++)
@@ -75,7 +71,7 @@ uint8_t* Image::getPixels() const
 }*/
 
 uint8_t& Image::operator() (int x, int y, int color){
-    return this->pixels[( (x + offsetX) + (offsetY + y) * this->width) * 4 + color];
+    return this->pixels[( x + y * this->width) * 4 + color];
 }
 
 void const Image::save(char* filename) const
@@ -88,8 +84,20 @@ void Image::crop(int top, int bottom, int left, int right)
     int tempWidth = right - left;
     int tempHeight = bottom - top;
 
-    this->offsetX = left;
-    this->offsetY = top;
+    uint8_t* tempList = (uint8_t*) malloc(tempHeight*tempWidth*4);
+
+    for(int i=0; i < tempWidth; i++)
+    {
+        for(int j=0; j < tempHeight; j++)
+        {
+            tempList[( i + j * tempWidth) * 4 + RED] = this->pixels[( (i + left) + (top + j) * this->width) * 4 + RED];
+            tempList[( i + j * tempWidth) * 4 + GREEN] = this->pixels[( (i + left) + (top + j) * this->width) * 4 + GREEN];
+            tempList[( i + j * tempWidth) * 4 + BLUE] = this->pixels[( (i + left) + (top + j) * this->width) * 4 + BLUE];
+            tempList[( i + j * tempWidth) * 4 + ALPHA] = this->pixels[( (i + left) + (top + j) * this->width) * 4 + ALPHA];
+        }
+    }
+
+    this->pixels = tempList;
 
     this->width = tempWidth;
     this->height = tempHeight;
@@ -101,16 +109,16 @@ Image Image::mask(Image background)
 
     for(int i=0; i < cop.getWidth(); i++) {
         for(int j=0; j < cop.getHeight(); j++) {
-            if(this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + RED] == background(i,j,RED) && this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + GREEN] == background(i,j,GREEN) && this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + BLUE] == background(i,j,BLUE) && this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + ALPHA] == background(i,j,ALPHA)) {
+            if(this->pixels[( i + j * this->width) * 4 + RED] == background(i,j,RED) && this->pixels[( i + j * this->width) * 4 + GREEN] == background(i,j,GREEN) && this->pixels[( i + j * this->width) * 4 + BLUE] == background(i,j,BLUE) && this->pixels[( i + j * this->width) * 4 + ALPHA] == background(i,j,ALPHA)) {
                 cop(i,j,ALPHA) = 0;
                 cop(i,j,RED) = 0;
                 cop(i,j,GREEN) = 0;
                 cop(i,j,BLUE) = 0;
             } else {
-                cop(i,j,ALPHA) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + ALPHA];
-                cop(i,j,RED) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + RED];
-                cop(i,j,GREEN) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + GREEN];
-                cop(i,j,BLUE) = this->pixels[( (i + offsetX) + (offsetY + j) * this->width) * 4 + BLUE];
+                cop(i,j,ALPHA) = this->pixels[( i + j * this->width) * 4 + ALPHA];
+                cop(i,j,RED) = this->pixels[( i + j * this->width) * 4 + RED];
+                cop(i,j,GREEN) = this->pixels[( i + j * this->width) * 4 + GREEN];
+                cop(i,j,BLUE) = this->pixels[( i + j * this->width) * 4 + BLUE];
             }
         }
     }

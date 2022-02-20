@@ -34,7 +34,6 @@ class Image
 
     private:
         int width, height, bpp;
-        int offsetX, offsetY;
         uint8_t* pixels;
 };
 
