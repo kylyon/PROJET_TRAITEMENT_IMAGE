@@ -31,6 +31,7 @@ class Image
         void const save(char* filename) const;
         void crop(int top,int bottom,int left,int right);
         Image mask(Image background, int seuil);
+        Image medianBlur(int radius);
         int getCenter(string cen);
 
 

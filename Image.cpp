@@ -2,6 +2,7 @@
 #include "Pixel.h"
 #include <vector>
 #include <string>
+#include <bits/stdc++.h>
 
 using std::vector;
 using std::string;
@@ -122,6 +123,42 @@ int Image::getCenter(string cen) {
     } else if(cen == "y") {
         return int((ymin+ymax)/2);
     }
+}
+
+Image Image::medianBlur(int radius)
+{
+    Image cop = Image(this->height,this->width);
+    for(int i = 0; i<this->width; i++){
+         for(int j = 0; j<this->height; j++){
+            int nbVoisin = 0;
+            vector<uint8_t> medR = vector<uint8_t>();
+            vector<uint8_t> medG = vector<uint8_t>();
+            vector<uint8_t> medB = vector<uint8_t>();
+            int minX = i - radius >= 0 ? i - radius : 0;
+            int maxX = i + radius + 1 <= this->width ? i + radius + 1 : this->width;
+            int minY = j - radius >= 0 ? j - radius : 0;
+            int maxY =  j + radius + 1 <= this->height ?  j + radius + 1 : this->height;
+
+
+            for(int x = minX; x < maxX; x++){
+                for(int y = minY; y < maxY; y++){
+                    medR.push_back( this->pixels[( x + y * this->width) * 4 + RED] );
+                    medG.push_back( this->pixels[( x + y * this->width) * 4 + GREEN] );
+                    medB.push_back( this->pixels[( x + y * this->width) * 4 + BLUE] );
+                }
+            }
+
+            sort(medR.begin(), medR.end());
+            sort(medG.begin(), medG.end());
+            sort(medB.begin(), medB.end());
+
+            cop(i,j,RED) = medR[(int)(medR.size()/2)];
+            cop(i,j,GREEN) = medG[(int)(medG.size()/2)];
+            cop(i,j,BLUE) = medB[(int)(medB.size()/2)];
+            cop(i,j,ALPHA) = 255;
+         }
+    }
+    return cop;
 }
 
 Image::~Image()

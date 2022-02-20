@@ -103,12 +103,15 @@ int main(int argc, char *argv[]) {
         if(argc > 2)
         {
             std::stringstream ssVerbose(all_args[2]);
-            bool verbose;
+            verbose = all_args[2] == "true" ? 1: 0;;
 
 
             if(!(ssVerbose >> std::boolalpha >> verbose)) {
                 printf("L'argument verbose doit avoir comme valeur true or false\n");
             }
+
+            std::cout << std::boolalpha;
+            std::cout<<verbose<<"\n";
 
             fading = all_args[3];
             mode = all_args[4];
@@ -116,18 +119,31 @@ int main(int argc, char *argv[]) {
         }
     }
 
+
     vector<Image> images = getImagesFromDisk(path);
+    vector<Image> blur = vector<Image>();
+
+    for(int i = 0; i < images.size(); i++)
+    {
+        Image temp = images[i].medianBlur(1);
+        string path = "Result/blur";
+        path.append(to_string(i));
+        path.append(".png");
+        temp.save(&path[0]);
+        blur.push_back(temp);
+    }
+
     if(!images.size())
     {
         printf("No images found");
         return 0;
     }
 
-    Image background = getBackground(images, verbose);
+    Image background = getBackground(blur, verbose);
 
-    vector<Image> masks = getMasks(images,background, verbose);
+    vector<Image> masks = getMasks(blur,background, verbose);
 
-    Image result = setResult(background, masks, images.size(), mode, saut);
+    Image result = setResult(background, masks, blur.size(), mode, saut);
     result.save("Result/resultat.png");
 
     //stbi_image_free(im.getPixels());
@@ -138,28 +154,16 @@ int main(int argc, char *argv[]) {
 Image setResult(Image background, vector<Image> masks, int sizes, string mode, int value) {
     Image result = background;
     int saut = mode=="step"?value : 1;
+    int start = 0;
 
     float opacity = 0;
-    float stepOpacity = 1.0f / (masks.size()/value);
+    float stepOpacity = 1.0f / (masks.size()/saut);
 
     cout<<mode<<" mode";
 
     // Liste background
-    if(mode == "step" || mode == "normal") {
-        for(int i = 0; i < masks.size(); i+=value) {
-            for(int x=0; x < result.getWidth(); x++) {
-                for(int y = 0; y < result.getHeight(); y++) {
-                    if(!(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0)) {
-                        result(x, y, RED) = getResultPixel(result, masks[i], x, y, RED, fading, opacity);
-                        result(x, y, GREEN) = getResultPixel(result, masks[i], x, y, GREEN, fading, opacity);
-                        result(x, y, BLUE) = getResultPixel(result, masks[i], x, y, BLUE, fading, opacity);
-                        result(x, y, ALPHA) = masks[i](x, y, ALPHA);
-                    }
-                }
-            }
-            opacity += stepOpacity;
-        }
-    } else if(mode == "distance") {
+    if(mode == "distance") {
+        start = 1;
         for(int x=0; x < result.getWidth(); x++) {
             for(int y = 0; y < result.getHeight(); y++) {
                 if(!(masks[0](x, y, RED) == 0 && masks[0](x, y, GREEN) == 0 && masks[0](x, y, BLUE) == 0 && masks[0](x, y, ALPHA) == 0)) {
@@ -170,30 +174,34 @@ Image setResult(Image background, vector<Image> masks, int sizes, string mode, i
                 }
             }
         }
+    }
+    for(int i = start; i < masks.size(); i+=saut) {
         int v = 0;
-        for(int i = 1; i < masks.size(); i++) {
+        if(mode == "distance")
+        {
             int xcenterV = masks[v].getCenter("x");
             int xcenterI = masks[i].getCenter("x");
             int ycenterV = masks[v].getCenter("y");
             int ycenterI = masks[i].getCenter("y");
             if(abs(sqrt(pow((xcenterV - xcenterI), 2) + pow((ycenterV - ycenterI), 2))) > value) {
-                for(int x=0; x < result.getWidth(); x++) {
-                    for(int y = 0; y < result.getHeight(); y++) {
-                        if(!(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0)) {
-                            result(x, y, RED) = getResultPixel(result, masks[i], x, y, RED, fading, opacity);
-                            result(x, y, GREEN) = getResultPixel(result, masks[i], x, y, GREEN, fading, opacity);
-                            result(x, y, BLUE) = getResultPixel(result, masks[i], x, y, BLUE, fading, opacity);
-                            result(x, y, ALPHA) = masks[i](x, y, ALPHA);
-                        }
-                    }
-                }
-                opacity += stepOpacity;
-                v = i;
+                continue;
             }
         }
-    } else {
-        printf("Erreur: Mode choisi inconnu!");
-        return nullptr;
+        for(int x=0; x < result.getWidth(); x++) {
+            for(int y = 0; y < result.getHeight(); y++) {
+                if(!(masks[i](x, y, RED) == 0 && masks[i](x, y, GREEN) == 0 && masks[i](x, y, BLUE) == 0 && masks[i](x, y, ALPHA) == 0)) {
+                    result(x, y, RED) = getResultPixel(result, masks[i], x, y, RED, fading, opacity);
+                    result(x, y, GREEN) = getResultPixel(result, masks[i], x, y, GREEN, fading, opacity);
+                    result(x, y, BLUE) = getResultPixel(result, masks[i], x, y, BLUE, fading, opacity);
+                    result(x, y, ALPHA) = masks[i](x, y, ALPHA);
+                }
+            }
+        }
+        opacity += stepOpacity;
+        if(mode == "distance")
+        {
+            v = i;
+        }
     }
     // Check par rapport au saut quel mask faire, for par rapport a masks.size avec un i + = saut a chaque fin de boucle
     return result;
@@ -280,7 +288,7 @@ vector<Image> getMasks(vector<Image> images, Image background,  bool verbose)
 {
     vector<Image> masks = vector<Image>();
     for(int i = 0; i < images.size(); i++) {
-        Image cop = images[i].mask(background, 10);
+        Image cop = images[i].mask(background, 50);
         if(verbose)
         {
             string path = "Result/mask";
