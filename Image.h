@@ -20,6 +20,7 @@ class Image
 {
     public:
         Image(char* filename);
+        Image(string filename);
         Image(int height, int width);
         int getWidth() const;
         int getHeight() const;
@@ -29,7 +30,7 @@ class Image
         uint8_t& operator() (int x, int y, int color);
         void const save(char* filename) const;
         void crop(int top,int bottom,int left,int right);
-        Image mask(Image background);
+        Image mask(Image background, int seuil);
         int getCenter(string cen);
 
 

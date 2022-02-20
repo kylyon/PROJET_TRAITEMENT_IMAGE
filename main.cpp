@@ -9,6 +9,11 @@
 #include <string>
 #include <sstream>
 
+#include <dirent.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+
 using std::vector;
 using std::string;
 using namespace std;
@@ -19,19 +24,69 @@ vector<Image> normalize(vector<Image> images);
 vector<Image> getMasks(vector<Image> images, Image background, bool verbose);
 int getResultPixel(Image background, Image mask, int x, int y, int channel, string fading, float opacity);
 
+char* path = "Image/vertical";
 bool verbose = false;
 string fading = "normal";
-string mode = "distance";
-int saut = 300;
+string mode = "normal";
+int saut = 1;
+
+
+
+
+vector<Image> getImagesFromDisk(const char *arg)
+{
+    DIR *dirp;
+    struct dirent *dp;
+
+
+    if ((dirp = opendir(arg)) == NULL) {
+        perror("couldn't open arg");
+        return vector<Image>();
+    }
+    printf("open %s\n", arg);
+
+    vector<Image> images = vector<Image>();
+    do {
+        errno = 0;
+        if ((dp = readdir(dirp)) != NULL) {
+            if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0){
+                char temp[100];   // array to hold the result.
+
+                strcpy(temp,arg); // copy string one into the result.
+                string str = arg;
+                char lastChar = str.back();
+                if(lastChar != '/')
+                {
+                    strcat(temp,"/");
+                }
+                strcat(temp,dp->d_name);
+
+                string result = temp;
+                if(result.find(".jpg") || result.find(".jpeg") || result.find(".png"))
+                {
+                    printf("- %s\n", temp);
+
+                    Image im = Image(result);
+                    images.push_back(im);
+                }
+            }
+        }
+    } while (dp != NULL);
+
+    return images;
+}
 
 int main(int argc, char *argv[]) {
-    if(argc != 5 && argc != 1)
+
+
+    if(argc != 6 && argc != 2)
     {
-        printf("Veuillez renseigner les 3 parametres :\n");
+        printf("Veuillez renseigner les 5 parametres :\n");
+        printf("    path : le chemin vers le dossier contenant les images a traiter\n");
         printf("    verbose : true ou false\n");
         printf("    fading : normal ou fading ou reverse\n");
         printf("    mode : normal ou step ou distance\n");
-        printf("    mode value : valeur pour le mode choisi (Ex : mode value = 2 avec le mode step veut dire un pas de 2\n");
+        printf("    mode value : valeur pour le mode choisi (Ex : mode value = 2 avec le mode step veut dire un pas de 2)\n");
         return 0;
     }
 
@@ -42,50 +97,31 @@ int main(int argc, char *argv[]) {
     }
 
 
-    if(argc != 1)
+    if(argc > 1)
     {
-        std::stringstream ssVerbose(all_args[1]);
-        bool verbose;
+        path = argv[1];
+        if(argc > 2)
+        {
+            std::stringstream ssVerbose(all_args[2]);
+            bool verbose;
 
 
-        if(!(ssVerbose >> std::boolalpha >> verbose)) {
-            printf("L'argument verbose doit avoir comme valeur true or false\n");
+            if(!(ssVerbose >> std::boolalpha >> verbose)) {
+                printf("L'argument verbose doit avoir comme valeur true or false\n");
+            }
+
+            fading = all_args[3];
+            mode = all_args[4];
+            saut = stoi(all_args[5]);
         }
-
-        fading = all_args[2];
-        mode = all_args[3];
-        saut = stoi(all_args[4]);
     }
 
-
-
-
-    vector<Image> images = vector<Image>();
-
-    Image im = Image("Image/vertical/image1.png");
-    Image im1 = Image("Image/vertical/image2.png");
-    Image im2 = Image("Image/vertical/image3.png");
-    Image im3 = Image("Image/vertical/image4.png");
-    Image im4 = Image("Image/vertical/image5.png");
-    Image im5 = Image("Image/vertical/image6.png");
-    Image im6 = Image("Image/vertical/image7.png");
-    Image im7 = Image("Image/vertical/image8.png");
-    Image im8 = Image("Image/vertical/image9.png");
-    //Image im9 = Image("Image/image10.png");
-    //Image im10 = Image("Image/image11.png");
-
-
-    images.push_back(im);
-    images.push_back(im1);
-    images.push_back(im2);
-    images.push_back(im3);
-    images.push_back(im4);
-    images.push_back(im5);
-    images.push_back(im6);
-    images.push_back(im7);
-    images.push_back(im8);
-    //images.push_back(im9);
-    //images.push_back(im10);
+    vector<Image> images = getImagesFromDisk(path);
+    if(!images.size())
+    {
+        printf("No images found");
+        return 0;
+    }
 
     Image background = getBackground(images, verbose);
 
@@ -94,15 +130,19 @@ int main(int argc, char *argv[]) {
     Image result = setResult(background, masks, images.size(), mode, saut);
     result.save("Result/resultat.png");
 
-    stbi_image_free(im.getPixels());
+    //stbi_image_free(im.getPixels());
 
     return 0;
 }
 
 Image setResult(Image background, vector<Image> masks, int sizes, string mode, int value) {
     Image result = background;
+    int saut = mode=="step"?value : 1;
+
     float opacity = 0;
     float stepOpacity = 1.0f / (masks.size()/value);
+
+    cout<<mode<<" mode";
 
     // Liste background
     if(mode == "step" || mode == "normal") {
@@ -120,7 +160,6 @@ Image setResult(Image background, vector<Image> masks, int sizes, string mode, i
             opacity += stepOpacity;
         }
     } else if(mode == "distance") {
-        printf("distance mode \n");
         for(int x=0; x < result.getWidth(); x++) {
             for(int y = 0; y < result.getHeight(); y++) {
                 if(!(masks[0](x, y, RED) == 0 && masks[0](x, y, GREEN) == 0 && masks[0](x, y, BLUE) == 0 && masks[0](x, y, ALPHA) == 0)) {
@@ -241,7 +280,7 @@ vector<Image> getMasks(vector<Image> images, Image background,  bool verbose)
 {
     vector<Image> masks = vector<Image>();
     for(int i = 0; i < images.size(); i++) {
-        Image cop = images[i].mask(background);
+        Image cop = images[i].mask(background, 10);
         if(verbose)
         {
             string path = "Result/mask";

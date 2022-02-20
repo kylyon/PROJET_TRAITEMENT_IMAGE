@@ -12,6 +12,11 @@ Image::Image(char* filename)
     this->pixels = stbi_load(filename, &this->width, &this->height, &this->bpp, 4);
 }
 
+Image::Image(string filename)
+{
+    this->pixels = stbi_load(filename.c_str(), &this->width, &this->height, &this->bpp, 4);
+}
+
 Image::Image(int height, int width)
 {
     this->pixels = (uint8_t*) malloc(width*height*4);
@@ -67,13 +72,14 @@ void Image::crop(int top, int bottom, int left, int right)
     this->height = tempHeight;
 }
 
-Image Image::mask(Image background)
+Image Image::mask(Image background, int seuil)
 {
     Image cop = Image(this->getHeight(), this->getWidth());
 
     for(int i=0; i < cop.getWidth(); i++) {
         for(int j=0; j < cop.getHeight(); j++) {
-            if(this->pixels[( i + j * this->width) * 4 + RED] == background(i,j,RED) && this->pixels[( i + j * this->width) * 4 + GREEN] == background(i,j,GREEN) && this->pixels[( i + j * this->width) * 4 + BLUE] == background(i,j,BLUE) && this->pixels[( i + j * this->width) * 4 + ALPHA] == background(i,j,ALPHA)) {
+            float similarity = abs(this->pixels[( i + j * this->width) * 4 + RED] - background(i,j,RED)) + abs(this->pixels[( i + j * this->width) * 4 + GREEN] - background(i,j,GREEN)) + abs(this->pixels[( i + j * this->width) * 4 + BLUE] - background(i,j,BLUE)) + abs(this->pixels[( i + j * this->width) * 4 + ALPHA] - background(i,j,ALPHA));
+            if(similarity < seuil) {
                 cop(i,j,ALPHA) = 0;
                 cop(i,j,RED) = 0;
                 cop(i,j,GREEN) = 0;
